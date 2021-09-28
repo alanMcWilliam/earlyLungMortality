@@ -102,12 +102,12 @@ view(dfSummary(lung20clean))
 
 ggplot(data=lung20clean, aes(x = halfDensity, color = nintyDay)) + 
   geom_histogram(breaks=seq(-20,40, by = 2)) +
-  labs(title = i, x = "Muscle density" ) +
+  labs(title = "", x = "Muscle density" ) +
   theme(panel.background = element_blank())
 
 ggplot(data=lung20clean, aes(x = halfDensity, color = hundredEighty)) + 
   geom_histogram(breaks=seq(-20,40, by = 2)) +
-  labs(title = i, x = "Muscle density" ) +
+  labs(title = "", x = "Muscle density" ) +
   theme(panel.background = element_blank())
 
 wilcox.test(lung20clean$halfDensity~lung20clean$nintyDay)
@@ -122,7 +122,7 @@ summary(test)
 summary(lung20clean$fullAreaCC)
 ggplot(data=lung20clean, aes(x = fullAreaCC, color = nintyDay)) + 
   geom_histogram(breaks=seq(0,100, by = 5)) +
-  labs(title = i, x = "Muscle area" ) +
+  labs(title = "", x = "Muscle area" ) +
   theme(panel.background = element_blank())
 
 wilcox.test(lung20clean$fullAreaCC~lung20clean$nintyDay)
@@ -149,33 +149,7 @@ ggplot(lung20clean) +
 
 
 
-##############################################################################
-### work with Fabio's data
-lungFabio <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/Lung_pathology.csv')
-lungFabioCFS <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/clean_cfs.csv')
-lungFabioStats <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/stats.csv')
-lungFabioStatsExtra <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/extra_stats.csv')
 
-lungFabioCheckExtra <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/seg_sanity_extra.csv')
-lungFabioCheck <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/seg_sanity.csv')
-
-lungFabioStats$ID <- str_remove(lungFabioStats$ID, '.npy')
-lungFabioStats <- lungFabioStats %>%
-  rename(patient_id = "ID",
-         Area = "SM.Area",
-         Density = "SM.Density")
-
-lungFabioStatsExtra$ID <- str_remove(lungFabioStatsExtra$ID, '.npy')
-lungFabioStatsExtra <- lungFabioStatsExtra %>%
-  rename(patient_id = "ID",
-         Area = "SM.Area",
-         Density = "SM.Density")
-
-lungFabioStats_combine <- rbind(lungFabioStats, lungFabioStatsExtra)
-lungFabio <- merge(lungFabio, lungFabioStats_combine, by = 'patient_id')
-
-
-View(lungFabio)
 
 #######################
 #I've put sanity check images for the 55/20 cohort on server 2 (/data/Donal/lung_55_20_SANITY)
