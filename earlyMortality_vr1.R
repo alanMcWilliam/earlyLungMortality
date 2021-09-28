@@ -75,16 +75,16 @@ summary(lung20$hundredEighty)
 lung20clean <- lung20 %>%
   select(Age, tumour.size, fullArea, halfDensity, nintyDay, hundredEighty, performance.status, gender, T.stage, N.stage) %>%
   mutate(T.stageClean = case_when(T.stage == 'T1' ~ 'T1',
-                                  T.stage == 'T1a' ~ 'T1',# 'low',
+                                  T.stage == 'T1a' ~ 'T1',
                                   T.stage == 'T1b' ~ 'T1',
                                   T.stage == 'T2' ~ 'T2',
-                                  T.stage == 'T2a' ~ 'T2', #'low',
+                                  T.stage == 'T2a' ~ 'T2', 
                                   T.stage == 'T2b' ~ 'T2',
                                   T.stage == 'T3' ~ 'T3',
                                   T.stage == 'T4' ~ 'T4')) %>%
-  mutate(N.stageClean = case_when(N.stage == 'N0' ~ 'N0',# 'low',
-                                  N.stage == 'N1' ~ 'N1', #'high',
-                                  N.stage == 'N2' ~ 'N2', #'low',
+  mutate(N.stageClean = case_when(N.stage == 'N0' ~ 'N0',
+                                  N.stage == 'N1' ~ 'N1', 
+                                  N.stage == 'N2' ~ 'N2', 
                                   N.stage == 'N2c' ~ 'N2',
                                   N.stage == 'N3' ~ 'N3')) %>%
   select(Age, tumour.size, fullArea, halfDensity, nintyDay, hundredEighty, performance.status, gender, T.stageClean, N.stageClean)
