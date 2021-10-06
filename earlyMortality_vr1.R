@@ -43,13 +43,13 @@ summary(lung20$SM.Density)
 ggplot(data=lung20, aes(halfDensity)) + 
   geom_histogram(breaks=seq(-20,40, by = 2),
                  col = "skyblue", fill = "lightblue") +
-  labs(title = i, x = "Muscle density" ) +
+  labs(title = "", x = "Muscle density" ) +
   theme(panel.background = element_blank())
 
 ggplot(data=lung20, aes(fullDensity)) + 
   geom_histogram(breaks=seq(-20,40, by = 2),
                  col = "skyblue", fill = "lightblue") +
-  labs(title = i, x = "Muscle density" ) +
+  labs(title = "", x = "Muscle density" ) +
   theme(panel.background = element_blank())
 
 ggplot(data = lung20) +
@@ -57,7 +57,7 @@ ggplot(data = lung20) +
                  alpha=0.3, fill ="red",binwidth=2,position="dodge") +
   geom_histogram(aes(x = fullDensity), 
                  alpha=0.3, fill ="green",binwidth=2,position="dodge") +
-  labs(title = i, x = "Muscle density") +
+  labs(title = "", x = "Muscle density") +
   theme(panel.background = element_blank())
 
 plot(lung20$fullDensity, lung20$halfDensity)
