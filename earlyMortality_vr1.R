@@ -7,6 +7,7 @@ library(stringr)
 library(ggplot2)
 library(ggpubr)
 library(summarytools)
+library(tidyr)
 
 
 ######################################################################
@@ -14,9 +15,10 @@ library(summarytools)
 
 lung20 <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/20_fraction_pt_vr2_chemo_vr2.csv')
 lung20halfMask <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/alan_half_mask_stats.csv')
-lung20fullMask <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia//alan_stats.csv')
+lung20fullMask <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/alan_stats.csv')
 
-
+locationSanity <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/20fracLocationSanity.csv')
+segSanity <- read.csv('C:/Users/alan_/Desktop/Lung_sarcopenia/20fracSanity.csv')
 
 ######################################################################
 
@@ -34,6 +36,13 @@ lung20fullMask <- lung20fullMask %>%
 lung20 <- merge(lung20, lung20fullMask, by = 'ID')
 lung20 <- merge(lung20, lung20halfMask, by = 'ID')
 View(lung20)
+
+### sanity check - remove images
+
+lung20 <- lung20 %>%
+  filter(!ID %in% locationSanity$ID) %>%
+  filter(!ID %in% segSanity$ID)
+
 
 #### sumarise data and plot some graphs
 
@@ -90,7 +99,10 @@ lung20clean <- lung20 %>%
                                   N.stage == 'N2' ~ 'N2', 
                                   N.stage == 'N2c' ~ 'N2',
                                   N.stage == 'N3' ~ 'N3')) %>%
+  mutate_at(vars(nintyDay, hundredEighty), ~replace_na(.,FALSE)) %>%
   select(Age, tumour.size, fullArea, halfDensity, nintyDay, hundredEighty, performance.status, gender, T.stageClean, N.stageClean)
+
+view(dfSummary(lung20clean))
 
 lung20clean$comp <- complete.cases(lung20clean)
 lung20clean <- lung20clean[lung20clean$comp == TRUE,]
@@ -134,7 +146,7 @@ summary(sarcNinty)
 sarcNinty <- glm(nintyDay~fullAreaCC + Age + T.stageClean + N.stageClean + gender, data = lung20clean, family=binomial(link='logit'))
 summary(sarcNinty)
 
-test2 <- glm(hundredEighty~fullAreaCC + Age + tumour.size, data = lung20clean, family=binomial(link='logit'))
+test2 <- glm(hundredEighty~fullAreaCC + Age + log(tumour.size) + gender, data = lung20clean, family=binomial(link='logit'))
 summary(test2)
 
 
