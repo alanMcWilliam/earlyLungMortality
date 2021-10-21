@@ -1,6 +1,6 @@
 
 ### 28th Sept updated to git repository 
-
+### 18th Oct added samity check image removal - spinal level and segmentation
 
 library(dplyr)
 library(stringr)
@@ -86,32 +86,33 @@ summary(lung20$hundredEighty)
 ###clean up dataset
 lung20clean <- lung20 %>%
   select(Age, tumour.size, fullArea, halfDensity, nintyDay, hundredEighty, performance.status, gender, T.stage, N.stage) %>%
-  mutate(T.stageClean = case_when(T.stage == 'T1' ~ 'T1',
-                                  T.stage == 'T1a' ~ 'T1',
-                                  T.stage == 'T1b' ~ 'T1',
-                                  T.stage == 'T2' ~ 'T2',
-                                  T.stage == 'T2a' ~ 'T2', 
-                                  T.stage == 'T2b' ~ 'T2',
-                                  T.stage == 'T3' ~ 'T3',
-                                  T.stage == 'T4' ~ 'T4')) %>%
-  mutate(N.stageClean = case_when(N.stage == 'N0' ~ 'N0',
-                                  N.stage == 'N1' ~ 'N1', 
-                                  N.stage == 'N2' ~ 'N2', 
-                                  N.stage == 'N2c' ~ 'N2',
-                                  N.stage == 'N3' ~ 'N3')) %>%
+  mutate(T.stageClean = case_when(T.stage == 'T1' ~ '1',
+                                  T.stage == 'T1a' ~ '1',
+                                  T.stage == 'T1b' ~ '1',
+                                  T.stage == 'T2' ~ '2',
+                                  T.stage == 'T2a' ~ '2', 
+                                  T.stage == 'T2b' ~ '2',
+                                  T.stage == 'T3' ~ '3',
+                                  T.stage == 'T4' ~ '4')) %>%
+  mutate(N.stageClean = case_when(N.stage == 'N0' ~ '0',
+                                  N.stage == 'N1' ~ '1', 
+                                  N.stage == 'N2' ~ '2', 
+                                  N.stage == 'N2c' ~ '2',
+                                  N.stage == 'N3' ~ '3')) %>%
   mutate_at(vars(nintyDay, hundredEighty), ~replace_na(.,FALSE)) %>%
   select(Age, tumour.size, fullArea, halfDensity, nintyDay, hundredEighty, performance.status, gender, T.stageClean, N.stageClean)
 
 view(dfSummary(lung20clean))
 
-lung20clean$comp <- complete.cases(lung20clean)
-lung20clean <- lung20clean[lung20clean$comp == TRUE,]
-lung20clean <- lung20clean[-ncol(lung20clean)]
+#lung20Pat <- lung20 %>%
+#  select(ID)
+
+lung20clean <- lung20clean[complete.cases(lung20clean),]
 
 ### convert to cm3 assuming sampled at ~1mm
 lung20clean$fullAreaCC <- lung20clean$fullArea*0.01
 ### remove single PS 4
-lung20clean <- lung20clean[as.numeric(as.character(lung20clean$performance.status)) < 4, ]
+#lung20clean <- lung20clean[as.numeric(as.character(lung20clean$performance.status)) < 4, ]
 
 view(dfSummary(lung20clean))
 
@@ -129,14 +130,20 @@ wilcox.test(lung20clean$halfDensity~lung20clean$nintyDay)
 wilcox.test(lung20clean$halfDensity~lung20clean$hundredEighty)
 
 
-test <- glm(lung20clean$nintyDay~lung20clean$halfDensity)
-summary(test)
+sarcDensity <- glm(lung20clean$nintyDay~lung20clean$halfDensity)
+summary(sarcDensity)
+#sarcDensity <- glm(nintyDay~halfDensity + Age + log(tumour.size) + gender, data = lung20clean, family=binomial(link='logit'))
+#summary(sarcDensity)
+sarcDensity <- glm(nintyDay~halfDensity + Age + T.stageClean + N.stageClean + gender, data = lung20clean, family=binomial(link='logit'))
+summary(sarcDensity)
+
+
 test <- glm(lung20clean$hundredEighty~lung20clean$halfDensity)
 summary(test)
 
 summary(lung20clean$fullAreaCC)
 ggplot(data=lung20clean, aes(x = fullAreaCC, color = nintyDay)) + 
-  geom_histogram(breaks=seq(0,100, by = 5)) +
+  geom_density() +
   labs(title = "", x = "Muscle area" ) +
   theme(panel.background = element_blank())
 
@@ -149,9 +156,14 @@ summary(sarcNinty)
 test2 <- glm(hundredEighty~fullAreaCC + Age + log(tumour.size) + gender, data = lung20clean, family=binomial(link='logit'))
 summary(test2)
 
+m1 <- AIC(sarcDensity)
+m2 <- AIC(sarcNinty)
+anova(sarcDensity, sarcNinty, test = "Chisq")
+anova(nintyDayPS, sarcNinty, test = "Chisq")
+
 
 summary(lung20clean$Age)
-lung20clean$ageBin <- cut(lung20clean$Age, c(45, 50, 55, 60, 65, 70, 75, 80, 85, 90))
+lung20clean$ageBin <- cut(lung20clean$Age, c(40, 50, 60, 70, 80, 90))
 
 ggplot(lung20clean) +
   geom_boxplot(aes(x = ageBin, y = fullAreaCC, fill = nintyDay))
@@ -159,10 +171,91 @@ ggplot(lung20clean) +
 nintyDayPS <- glm(nintyDay~performance.status + Age + T.stageClean + N.stageClean  + gender, data = lung20clean, family=binomial(link='logit'))
 summary(nintyDayPS)
 
-ggplot(lung20clean) +
+p <-ggplot(lung20clean) +
   geom_boxplot(aes(x = performance.status, y = fullAreaCC, fill = nintyDay))
+show(p)
+
+ggplot(lung20clean) +
+  geom_boxplot(aes(x = gender, y = fullAreaCC, fill = nintyDay)) +
+  theme(panel.background = element_blank())
+
+tapply(lung20clean$nintyDay, lung20clean$gender, summary)
+tapply(lung20clean$nintyDay, lung20clean$gender, summary)
+
+t <- lung20clean %>%
+  filter(gender == "Male")
+wilcox.test(t$fullAreaCC~t$nintyDay)
+ggplot(t) +
+  geom_boxplot(aes(x = nintyDay, y = fullAreaCC, fill = nintyDay))
 
 
+t <- lung20clean %>%
+  filter(gender == "Female")
+wilcox.test(t$fullAreaCC~t$nintyDay)
+
++
+  stat_compare_means(aes(group = gender))
+
+
+p <- ggboxplot(lung20clean, x = "gender", y = "fullAreaCC",
+               color = "nintyDay", palette = "jco",
+               add = "jitter")
+p + stat_compare_means(aes(group = nintyDay))
+
+
+###################################################
+#### try and do some cross-validation
+
+library(boot)
+
+cost <- function(r, pi = 0) mean(abs(r-pi) > 0.5)
+model <- glm(nintyDay~fullAreaCC + Age + T.stageClean + N.stageClean + gender, data = lung20clean, family=binomial(link='logit'))
+
+t <- 1-cv.glm(lung20clean, model,K=5,cost=cost)$delta[1]
+t
+
+lungClean2 <- lung20clean %>%
+  select(Age, fullAreaCC, nintyDay, gender,T.stageClean, N.stageClean, fullAreaCC)
+
+# Define training control
+set.seed(123) 
+train.control <- trainControl(method = "cv", number = 10, savePredictions = T)
+# Train the model
+model <- train(as.factor(nintyDay)~., data = lungClean2,
+               trControl = train.control, "rf", preProc=c("center", "scale"))
+# Summarize the results
+print(model)
+#plot(model)
+
+### nothing here works...
+library(pROC)
+selectedIndices <- model$pred$mtry == 2
+plot.roc(model$pred$obs[selectedIndices],
+         model$pred$M[selectedIndices])
+
+library(MLeval)
+res <- evalm(model)
+res$roc
+
+
+library(plotROC)
+g <- ggplot(model$pred[selectedIndices, ], aes(m=M, d=factor(obs, levels = c("R", "M")))) + 
+  geom_roc(n.cuts=0) + 
+  coord_equal() +
+  style_roc()
+plot(g)
+###################################################
+library(randomForest)
+
+
+lungClean3 <- lung20clean %>%
+  select(Age, fullAreaCC, nintyDay, gender,T.stageClean, N.stageClean, fullAreaCC, performance.status, halfDensity)
+
+sarcRF <- randomForest(as.factor(nintyDay) ~ fullAreaCC + Age + T.stageClean + N.stageClean + gender + performance.status, ntree=500, data=lungClean3, importance=TRUE,
+                        proximity=TRUE)
+
+sarcRF
+importance(sarcRF, type = 1)
 
 
 
