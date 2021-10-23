@@ -148,6 +148,7 @@ ggplot(data=lung20clean, aes(x = fullAreaCC, color = nintyDay)) +
   theme(panel.background = element_blank())
 
 wilcox.test(lung20clean$fullAreaCC~lung20clean$nintyDay)
+
 sarcNinty <- glm(nintyDay~fullAreaCC + Age + log(tumour.size) + gender, data = lung20clean, family=binomial(link='logit'))
 summary(sarcNinty)
 sarcNinty <- glm(nintyDay~fullAreaCC + Age + T.stageClean + N.stageClean + gender, data = lung20clean, family=binomial(link='logit'))
@@ -177,6 +178,12 @@ show(p)
 
 ggplot(lung20clean) +
   geom_boxplot(aes(x = gender, y = fullAreaCC, fill = nintyDay)) +
+  labs(title = "", y = "Muscle area" ) +
+  theme(panel.background = element_blank())
+
+ggplot(lung20clean) +
+  geom_boxplot(aes(x = gender, y = halfDensity, fill = nintyDay)) +
+  labs(title = "", y = "Muscle density" ) +
   theme(panel.background = element_blank())
 
 tapply(lung20clean$nintyDay, lung20clean$gender, summary)
@@ -185,6 +192,9 @@ tapply(lung20clean$nintyDay, lung20clean$gender, summary)
 t <- lung20clean %>%
   filter(gender == "Male")
 wilcox.test(t$fullAreaCC~t$nintyDay)
+wilcox.test(t$halfDensity~t$nintyDay)
+
+
 ggplot(t) +
   geom_boxplot(aes(x = nintyDay, y = fullAreaCC, fill = nintyDay))
 
@@ -192,6 +202,7 @@ ggplot(t) +
 t <- lung20clean %>%
   filter(gender == "Female")
 wilcox.test(t$fullAreaCC~t$nintyDay)
+wilcox.test(t$halfDensity~t$nintyDay)
 
 +
   stat_compare_means(aes(group = gender))
@@ -216,12 +227,14 @@ t
 
 lungClean2 <- lung20clean %>%
   select(Age, fullAreaCC, nintyDay, gender,T.stageClean, N.stageClean, fullAreaCC)
+lungClean2b <- lung20clean %>%
+  select(Age, fullAreaCC, nintyDay, gender,T.stageClean, N.stageClean, halfDensity)
 
 # Define training control
 set.seed(123) 
-train.control <- trainControl(method = "cv", number = 10, savePredictions = T)
+train.control <- trainControl(method = "cv", number = 5, savePredictions = T)
 # Train the model
-model <- train(as.factor(nintyDay)~., data = lungClean2,
+model <- train(as.factor(nintyDay)~., data = lungClean2b,
                trControl = train.control, "rf", preProc=c("center", "scale"))
 # Summarize the results
 print(model)
