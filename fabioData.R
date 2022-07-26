@@ -81,7 +81,7 @@ stview(dfSummary(lungFabioClean))
 ### modeling building
 
 lungFabioNew <- lungFabioClean %>%
-  select(gender, Age, T.stageClean, N.stageClean, fullAreaCC, nintyDay)
+  select(gender, Age, T.stageClean, N.stageClean, fullAreaCC, nintyDay, halfDensity)
 lungFabioNew <- lungFabioNew[complete.cases(lungFabioNew),]
 
 lungFabioNew$nintyDay <- as.numeric(lungFabioNew$nintyDay)

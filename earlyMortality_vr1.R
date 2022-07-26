@@ -154,6 +154,10 @@ summary(sarcNinty)
 sarcNinty <- glm(nintyDay~fullAreaCC + Age + T.stageClean + N.stageClean + gender, data = lung20clean, family=binomial(link='logit'))
 summary(sarcNinty)
 
+# include both measures
+sarcBoth <- glm(nintyDay~halfDensity + fullAreaCC + Age + T.stageClean + N.stageClean + gender, data = lung20clean, family=binomial(link='logit'))
+summary(sarcBoth)
+
 test2 <- glm(hundredEighty~fullAreaCC + Age + log(tumour.size) + gender, data = lung20clean, family=binomial(link='logit'))
 summary(test2)
 
@@ -162,6 +166,34 @@ m2 <- AIC(sarcNinty)
 anova(sarcDensity, sarcNinty, test = "Chisq")
 anova(nintyDayPS, sarcNinty, test = "Chisq")
 
+##################################################
+
+# test gender
+lung20cleanMale <- lung20clean %>%
+  filter(gender == "Male")
+lung20cleanFemale <- lung20clean %>%
+  filter(gender == "Female")
+
+summary(lung20cleanMale$nintyDay)
+summary(lung20cleanFemale$nintyDay)
+
+summary(lung20cleanMale$halfDensity)
+summary(lung20cleanFemale$halfDensity)
+
+summary(lung20cleanMale$fullAreaCC)
+summary(lung20cleanFemale$fullAreaCC)
+
+sarcNintyMale <- glm(nintyDay~fullAreaCC + Age + T.stageClean + N.stageClean, data = lung20cleanMale, family=binomial(link='logit'))
+summary(sarcNintyMale)
+sarcNintyFemale <- glm(nintyDay~fullAreaCC + Age + T.stageClean + N.stageClean, data = lung20cleanFemale, family=binomial(link='logit'))
+summary(sarcNintyFemale)
+
+sarcNintyMale <- glm(nintyDay~halfDensity + Age + T.stageClean + N.stageClean, data = lung20cleanMale, family=binomial(link='logit'))
+summary(sarcNintyMale)
+sarcNintyFemale <- glm(nintyDay~halfDensity + Age + T.stageClean + N.stageClean, data = lung20cleanFemale, family=binomial(link='logit'))
+summary(sarcNintyFemale)
+
+############################################
 
 summary(lung20clean$Age)
 lung20clean$ageBin <- cut(lung20clean$Age, c(40, 50, 60, 70, 80, 90))
@@ -230,6 +262,8 @@ lungClean2 <- lung20clean %>%
 lungClean2b <- lung20clean %>%
   select(Age, fullAreaCC, nintyDay, gender,T.stageClean, N.stageClean, halfDensity)
 
+
+library(caret)
 # Define training control
 set.seed(123) 
 train.control <- trainControl(method = "cv", number = 5, savePredictions = T)
@@ -238,7 +272,19 @@ model <- train(as.factor(nintyDay)~., data = lungClean2b,
                trControl = train.control, "rf", preProc=c("center", "scale"))
 # Summarize the results
 print(model)
-#plot(model)
+plot(model)
+
+
+model$bestTune
+model$results
+model$finalModel$importance
+
+
+
+##################
+summary(lungFabioNew$N.stageClean)
+pred <- predict(model$finalModel, newdata = lungFabioNew)
+
 
 ### nothing here works...
 library(pROC)
